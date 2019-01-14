@@ -1,11 +1,9 @@
 import React, { Component } from 'react';
-import 'core-js/fn/object/assign';
 import './App.css';
 import ArcgisMap from './components/ArcgisMap'
 import { ThemeProvider } from 'styled-components'
 import { getTheme } from './components/assets'
 import './theme'
-
 
 import mapItems from './mapItems'
 
