@@ -159,6 +159,7 @@ class ArcgisMap extends Component {
     this.modules = {};
     this.panStart = { x: 0, y: 0 };
     this.scrollStart = { y: 0 };
+    this.mapRef = React.createRef();
   }
 
   componentDidMount() {
@@ -203,7 +204,7 @@ class ArcgisMap extends Component {
           const map = new Map({ basemap: 'gray' });
 
           const view = new MapView({
-            container: this.props.id,
+            container: this.mapRef,
             map,
             zoom: 5.25, // Initial zoom, later set with view.extent
             center: finlandCoordinates, // Initial coordinates, later set with view.extent
@@ -580,12 +581,12 @@ class ArcgisMap extends Component {
 
   render() {
     if (this.state.ready) {
-      // this.renderMarkers(this.props.mapItems);
+      this.renderMarkers(this.props.mapItems);
     }
 
     return (
       <MapStyles>
-        <div id={this.props.id} />
+        <div ref={node => this.mapRef = node} id={this.props.id} />
       </MapStyles>
     );
   }

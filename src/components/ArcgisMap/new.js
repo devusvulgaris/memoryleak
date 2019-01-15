@@ -1,170 +1,31 @@
-import React, { Component } from 'react';
-import { arrayOf, number, shape, string } from 'prop-types';
-import esriLoader, { loadModules } from 'esri-loader';
-import styled, { injectGlobal } from 'styled-components';
-
-const esriApiVersion = '4.10';
-
-// eslint-disable-next-line no-unused-expressions
-injectGlobal`
-  @import 'https://js.arcgis.com/${esriApiVersion}/esri/css/main.css';
-`;
-
-const propTypes = {
-  mapItems: arrayOf(
-    shape({
-      lat: number.isRequired,
-      lng: number.isRequired,
-      name: string.isRequired,
-      slug: string.isRequired,
-      link: string,
-      image: string,
-      tag: string,
-    }),
-  ),
-  id: string,
-};
+import React, { Component } from 'react'
+import { Map } from '@esri/react-arcgis'
+import { loadModules } from '@esri/react-arcgis'
 
 const defaultProps = {
-  mapItems: [],
-  id: '3eeba041f4ab47998ab2ab220017617f', // backup: '3df11378d3e94993ae5040ff20dfe16b'
-};
-
-const options = {
-  url: `https://js.arcgis.com/${esriApiVersion}`,
-};
+  id: '3eeba041f4ab47998ab2ab220017617f'
+}
 
 const finlandCoordinates = [25.75, 61.92];
 
-const MapStyles = styled.div`
-  .esri-view {
-    position: relative;
-    height: 490px;
-    max-height: 490px;
-    overflow: hidden;
-    padding: 0;
-
-    .esri-view-surface--inset-outline:focus:after {
-      display: none;
-      content: none;
-    }
-
-    .esri-popup__main-container {
-      max-height: 100%;
-      width: 325px;
-      left: 50%;
-      transform: translateX(-50%);
-    }
-
-    .esri-popup__content {
-      margin: 0px;
-    }
-
-    .esri-popup__header {
-      position: absolute;
-      z-index: 5;
-      min-height: 40px;
-      right: 0;
-      top: 0;
-      width: 100%;
-    }
-
-    .esri-icon-close {
-      border-radius: 50%;
-      background: #FFF;
-      text-align: center;
-      height: 26px;
-      width: 26px;
-      flex: 0 0 26px;
-
-      &:before {
-        color: #000;
-        vertical-align: -29%;
-      }
-    }
-
-    .esri-attribution,
-    .esri-popup__feature-menu,
-    .esri-popup__feature-buttons,
-    .esri-popup__footer {
-      display: none;
-    }
-
-    .esri-popup__button {
-      &.esri-popup__button--dock {
-        display: none;
-      }
-    }
-
-    .esri-popup__header-container {
-      &.esri-popup__header-container--button {
-        display: none;
-      }
-    }
-  }
-
-  .map-teaser {
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    padding: 8% 1em 2%;
-    color: ${props => props.theme.bgColor};
-    min-height: 200px;
-    max-height: 200px;
-
-    img {
-      display: block;
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 100%;
-      min-height: 200px;
-      max-height: 200px;
-      height: 100%;
-      z-index: -1;
-    }
-
-    .tagline {
-      ${props => props.theme.getStyle('tag')};
-      color: ${props => props.theme.primaryColor};
-      background: ${props => props.theme.bgColor};
-      font-size: 0.85em;
-    }
-
-    .title {
-      ${props => props.theme.getStyle('headings.base')};
-      ${props => props.theme.getStyle('headings.h4')};
-      margin: 0 auto 1.5rem;
-      padding-top: 0.5rem;
-    }
-
-    a {
-      ${props => props.theme.getStyle('buttons.base')};
-      ${props => props.theme.getStyle('buttons.primary')};
-      align-self: center;
-      text-decoration: none;
-    }
-  }
-`;
-
-class ArcgisMap extends Component {
-  constructor() {
-    super();
+class MyMap extends Component {
+  constructor(props) {
+    super()
     this.state = {
       ready: false,
+      map: null,
+      view: null
     };
     this.modules = {};
     this.panStart = { x: 0, y: 0 };
     this.scrollStart = { y: 0 };
+    this.handleMapLoad = this.handleMapLoad.bind(this)
   }
 
   componentDidMount() {
-    if (!esriLoader.isLoaded()) {
-      esriLoader.loadScript(options);
-    }
+    // if (!esriLoader.isLoaded()) {
+    //   esriLoader.loadScript(options);
+    // }
 
     loadModules([
       'esri/Map',
@@ -279,19 +140,19 @@ class ArcgisMap extends Component {
             this.panStart.x = x / ev.touches.length;
             this.panStart.y = y / ev.touches.length;
 
-            const centerPoint = this.view.toScreen(this.view.center);
+            const centerPoint = this.state.view.toScreen(this.state.view.center);
 
-            const mapPoint = this.view.toMap({
+            const mapPoint = this.state.view.toMap({
               x: centerPoint.x + (movex * 1) / -1,
               y: centerPoint.y + (movey * 1) / -1,
             });
 
-            this.view.center = mapPoint;
+            this.state.view.center = mapPoint;
           };
 
-          view.surface.addEventListener('wheel', onWheel);
-          view.surface.addEventListener('touchstart', onTouchStart);
-          view.surface.addEventListener('touchmove', onTouchMove);
+          this.view.surface.addEventListener('wheel', onWheel);
+          this.view.surface.addEventListener('touchstart', onTouchStart);
+          this.view.surface.addEventListener('touchmove', onTouchMove);
 
           // Reposition on IE11 only
           const isIe11 =
@@ -306,7 +167,7 @@ class ArcgisMap extends Component {
           }
 
           this.theMap = map;
-          this.view = view;
+          this.view = this.state.view;
           this.onWheel = onWheel;
           this.onTouchStart = onTouchStart;
           this.onTouchMove = onTouchMove;
@@ -330,10 +191,10 @@ class ArcgisMap extends Component {
         (hash, hc) => `${hash}${hc.lat}${hc.lng}`,
         '',
       ) !==
-        this.props.mapItems.reduce(
-          (hash, hc) => `${hash}${hc.lat}${hc.lng}`,
-          '',
-        )
+      this.props.mapItems.reduce(
+        (hash, hc) => `${hash}${hc.lat}${hc.lng}`,
+        '',
+      )
     );
   }
 
@@ -347,22 +208,22 @@ class ArcgisMap extends Component {
       this.onMouseout = null;
     }
 
-    if (this.view && this.onWheel) {
+    if (this.state.view && this.onWheel) {
       this.view.surface.removeEventListener('wheel', this.onWheel);
     }
 
-    if (this.view && this.onTouchStart) {
+    if (this.state.view && this.onTouchStart) {
       this.view.surface.removeEventListener('touchstart', this.onTouchStart);
     }
 
-    if (this.view && this.onTouchMove) {
-      this.view.surface.removeEventListener('touchmove', this.onTouchMove);
+    if (this.state.view && this.onTouchMove) {
+      this.state.view.surface.removeEventListener('touchmove', this.onTouchMove);
     }
 
-    if (this.view) {
-      this.view.container = null;
-      this.view.destroy();
-      this.view = null;
+    if (this.state.view) {
+      this.state.view.container = null;
+      this.state.view.destroy();
+      this.state.view = null;
     }
 
     if (this.theMap) {
@@ -578,20 +439,30 @@ class ArcgisMap extends Component {
     this.bufferLayer = bufferLayer;
   }
 
+  handleMapLoad(map, view) {
+    this.setState({ map, view });
+}
+
   render() {
+    const { id } = this.props
+
     if (this.state.ready) {
-      // this.renderMarkers(this.props.mapItems);
+      this.renderMarkers(this.props.mapItems);
     }
 
     return (
-      <MapStyles>
-        <div id={this.props.id} />
-      </MapStyles>
-    );
+      <Map
+        id={id}
+        mapProperties={{ basemap: 'gray' }}
+        style={{ width: '100vw', height: '100vh' }}
+        viewProperties={{
+          center: [25.75, 61.92],
+          zoom: 5.25
+        }}
+      />
+    )
   }
 }
 
-ArcgisMap.propTypes = propTypes;
-ArcgisMap.defaultProps = defaultProps;
-
-export default ArcgisMap;
+MyMap.defaultProps = defaultProps
+export default MyMap
